@@ -23,8 +23,8 @@ const User = mongoose.model('User', {
         required: true,
         minlength: 7,
         trim: true,
-        validatea(value){
-            if(validator.value.includes("password")){
+        validate(value){
+            if(value.includes("password")){
                 throw new Error('password cannot be "password"!!')
             }
         }
