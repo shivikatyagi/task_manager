@@ -1,7 +1,8 @@
 const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcryptjs')
-const jwt = require ('jsonwebtoken')
+const jwt = require('jsonwebtoken')
+
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -25,12 +26,11 @@ const userSchema = new mongoose.Schema({
         required: true,
         minlength: 7,
         trim: true,
-        validate(value){
-            if(value.includes("password")){
-                throw new Error('password cannot be "password"!!')
+        validate(value) {
+            if (value.toLowerCase().includes('password')) {
+                throw new Error('Password cannot be "password"')
             }
         }
-
     },
     age: {
         type: Number,
@@ -41,20 +41,21 @@ const userSchema = new mongoose.Schema({
             }
         }
     },
-    tokens:[{
-        token:{
+    tokens: [{
+        token: {
             type: String,
             required: true
         }
     }]
 })
 
-userSchema.methods.AuthToken = async function(){
-    const user = this 
-    const token = jwt.sign({_id: user._id.toString()},'TaskManager')
-    
-    user.tokens = user.tokens.concat({token })
-    await user.save
+
+userSchema.methods.AuthToken = async function () {
+    const user = this
+    const token = jwt.sign({ _id: user._id.toString() }, 'TaskManager')
+
+    user.tokens = user.tokens.concat({ token })
+    await user.save()
 
     return token
 }
@@ -63,27 +64,28 @@ userSchema.statics.findByCredentials = async (email, password) => {
     const user = await User.findOne({ email })
 
     if (!user) {
-        throw new Error('wrong email or password')
+        throw new Error('Wrong email or password')
     }
 
     const isMatch = await bcrypt.compare(password, user.password)
 
     if (!isMatch) {
-        throw new Error('wrong email or password')
+        throw new Error('Wrong email or password')
     }
 
     return user
 }
 
-userSchema.pre('save',async function (next){
+userSchema.pre('save', async function (next) {
     const user = this
 
-    if(user.isModified('password')){
-        user.password = await bcrypt.hash(user.password , 8)
+    if (user.isModified('password')) {
+        user.password = await bcrypt.hash(user.password, 8)
     }
+
     next()
 })
 
-const User = mongoose.model('User', userSchema )
+const User = mongoose.model('User', userSchema)
 
 module.exports = User

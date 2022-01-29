@@ -1,15 +1,16 @@
 const express = require('express')
-const { findById, update } = require('../models/user')
-const router = new express.Router()
 const User = require('../models/user')
+const auth = require('../middleware/auth')
+const router = new express.Router()
 
-router.post('/users',async (req,res)=>{
+router.post('/users', async (req, res) => {
     const user = new User(req.body)
-    const token= await user.AuthToken()
-    try{
-       await user.save()
-        res.status(201).send({user,token})
-    } catch(e){
+
+    try {
+        await user.save()
+        const token = await user.AuthToken()
+        res.status(201).send({ user, token })
+    } catch (e) {
         res.status(400).send(e)
     }
 })
@@ -17,22 +18,16 @@ router.post('/users',async (req,res)=>{
 router.post('/users/login', async (req, res) => {
     try {
         const user = await User.findByCredentials(req.body.email, req.body.password)
-        const token= await user.AuthToken()
-        res.send({user,token})
+        const token = await user.AuthToken()
+        res.send({ user, token })
     } catch (e) {
         res.status(400).send()
     }
 })
  
-router.get('/users',async (req,res)=>{
+router.get('/users/me',auth, async (req,res)=>{
 
-    try{
-        const users= await User.find()
-        res.send(users)
-    }
-    catch(e){
-        res.status(500).send(e)
-    }
+    res.send(req.user)
 })
 
 router.get('/users/:id',async (req,res)=>{
