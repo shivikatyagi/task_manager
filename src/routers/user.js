@@ -2,7 +2,7 @@ const express = require('express')
 const User = require('../models/user')
 const auth = require('../middleware/auth')
 const router = new express.Router()
-
+//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MWVjZTVkMzBlNDgwZDJlZTBjYTI4ZTciLCJpYXQiOjE2NDM2MzcyNzF9._cbJfFJtbOKJuUKSZfIUo2v4ISe9RrorCyTwzuNv3Fo
 router.post('/users', async (req, res) => {
     const user = new User(req.body)
 
@@ -66,7 +66,7 @@ router.get('/users/:id',async (req,res)=>{
     }
 })
 
-router.patch('/users/:id',async(req,res)=>{
+router.patch('/users/me',auth,async(req,res)=>{
     const _id = req.params.id
     const updates = Object.keys(req.body)
     const AllowedUpdates = ['name','email','password','age']
@@ -79,13 +79,10 @@ router.patch('/users/:id',async(req,res)=>{
     try{
 
         const user = await User.findById(_id)
-        updates.forEach((update)=> user[update]=req.body[update])
-        await user.save()
+        updates.forEach((update)=> req.user[update]=req.body[update])
+        await req.user.save()
 
-        if(!user){
-            res.status(404).send()
-        }
-        res.send(user)
+        res.send(req.user)
     }
     catch(e){
         res.status(400).send(e)
@@ -93,15 +90,11 @@ router.patch('/users/:id',async(req,res)=>{
 
 })
 
-router.delete('/users/:id',async (req,res)=>{
+router.delete('/users/me',auth,async (req,res)=>{
     const _id = req.params.id
     try{
-        const user = await User.findByIdAndDelete(_id)
-        if(!user){
-            return res.status(404).send({error: 'user does not exist'})
-
-        }
-        res.send(user)
+        await req.user.remove()
+        res.send(req.user)
     }catch(e){
         res.status(500).send(e)
     }
