@@ -28,5 +28,3 @@ module.exports = {
     sendCancellationEmail
 }
 
-
-// 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
